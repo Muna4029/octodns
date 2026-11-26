@@ -527,10 +527,15 @@ class Manager(object):
             # we've found a dynamic config element
 
             # find its sources
-            found_sources = sources or self._get_sources(
-                name, config, eligible_sources
-            )
-            self.log.info('sync:   dynamic zone=%s, sources=%s', name, sources)
+            # Respect an explicit 'sources' argument (even if empty list). If not
+            # provided, attempt to derive sources. Ensure we always have an
+            # iterable to avoid TypeError when _get_sources returns None.
+            if sources is not None:
+                found_sources = sources
+            else:
+                found_sources = self._get_sources(name, config, eligible_sources) or []
+
+            self.log.info('sync:   dynamic zone=%s, sources=%s', name, found_sources)
             for source in found_sources:
                 if not hasattr(source, 'list_zones'):
                     raise ManagerException(
